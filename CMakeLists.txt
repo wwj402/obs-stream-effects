@@ -35,6 +35,7 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/filter-displacement.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-blur.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-stroke.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
 	"${PROJECT_SOURCE_DIR}/source/source-mirror.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
@@ -48,6 +49,7 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
+	"${PROJECT_SOURCE_DIR}/source/util-distancefield-generator.h"
 	"${PROJECT_SOURCE_DIR}/source/util-math.h"
 )
 SET(obs-stream-effects_SOURCES
@@ -55,6 +57,7 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-stroke.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
 	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
@@ -66,6 +69,7 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/gs-vertex.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/util-distancefield-generator.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 )
 SET(obs-stream-effects_LOCALE
@@ -74,20 +78,14 @@ SET(obs-stream-effects_LOCALE
 SET(obs-stream-effects_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/bilateral-blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/box-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/signeddistancefield.effect"
 )
 SET(obs-stream-effects_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
-)
-SET(obs-stream-effects_EFFECTS
-	"${PROJECT_SOURCE_DIR}/data/effects/bilateral-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/box-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 )
 SET(obs-stream-effects_LIBRARIES
 )
