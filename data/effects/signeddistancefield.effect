@@ -1,4 +1,112 @@
 // OBS Default
 uniform float4x4 ViewProj;
 
-uniform texture2d image;
+// Parameters
+uniform texture2d image;		// Actual Image to process
+uniform float2 imageSize;		// Image Size [x,y]
+uniform float2 imageSizeInverse;	// 1 / Image Size [x,y]
+uniform texture2d buffer;		// Stored values to read from
+uniform float2 bufferSize;		// Buffer Size [x,y]
+uniform float2 bufferSizeInverse;	// 1 / Buffer Size [x,y]
+
+
+// Samplers, Structs
+sample_state pointSampler {
+	Filter = Point;
+	AdressU = Clamp;
+	AdressV = Clamp;
+}
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv : TEXCOORD0;
+};
+
+// Default Vertex
+VertDataOut VSDefault(VertDataIn v_in) {
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+// Single Pass Iterative
+float4 PSIterativeSingle(VertDataOut v_in) : TARGET {
+	float4 rgba;
+	
+	float rgbaImage = image.Sample(pointSampler, v_in.uv).a;
+
+	// We are inside the actual image if input alpha is > 0.
+	if (rgbaImage > 0) {
+		return float4(0); // Distance is 0.
+	}
+
+	// Attempt to find a neighbouring texel with an Alpha > 0.
+	{
+		float iU, iD, iL, iR;
+		iU = image.Sample(pointSample, v_in.uv - float2(0, imageSizeInverse.y)).a;
+		iD = image.Sample(pointSample, v_in.uv + float2(0, imageSizeInverse.y)).a;
+		iL = image.Sample(pointSample, v_in.uv - float2(imageSizeInverse.x, 0)).a;
+		iR = image.Sample(pointSample, v_in.uv + float2(imageSizeInverse.x, 0)).a;
+
+		// We are exactly one texel away.
+		if ((iU > 0) || (iD > 0) || (iL > 0) || (iR > 0)) {
+			return float4(1); // Distance is 1.
+		}
+
+		// We are not exactly one texel away, so check diagonals.
+		iU = image.Sample(pointSample, v_in.uv + float2(-imageSizeInverse.x, -imageSizeInverse.y)).a;
+		iD = image.Sample(pointSample, v_in.uv + float2( imageSizeInverse.x, -imageSizeInverse.y)).a;
+		iL = image.Sample(pointSample, v_in.uv + float2(-imageSizeInverse.x, +imageSizeInverse.y)).a;
+		iR = image.Sample(pointSample, v_in.uv + float2( imageSizeInverse.x, +imageSizeInverse.y)).a;
+		
+		// We are exactly one diagonal texel away.
+		if ((iU > 0) || (iD > 0) || (iL > 0) || (iR > 0)) {
+			return float4(1.4142135623730950488016887242097); // Maybe overkill on precision here. >_>
+		}
+
+		// None of these match, so continue to iterative approach.
+	}
+	
+	// Find nearest neighbour with lowest distance.
+	{
+		float iC;		
+		iC = buffer.Sample(pointSample, v_in.uv).r;
+
+		float iU, iD, iL, iR;
+		iU = buffer.Sample(pointSample, v_in.uv - float2(0, imageSizeInverse.y)).r;
+		iD = buffer.Sample(pointSample, v_in.uv + float2(0, imageSizeInverse.y)).r;
+		iL = buffer.Sample(pointSample, v_in.uv - float2(imageSizeInverse.x, 0)).r;
+		iR = buffer.Sample(pointSample, v_in.uv + float2(imageSizeInverse.x, 0)).r;
+
+		float lowest = 16777216;
+		if (iU < lowest) { lowest = iU; }
+		if (iD < lowest) { lowest = iD; }
+		if (iL < lowest) { lowest = iL; }
+		if (iR < lowest) { lowest = iR; }
+
+		// Neighbouring texel has better value than we do.
+		if ((lowest + 1) <= iC) {
+			return float4(lowest + 1);
+		} else {
+			// All values are bigger than our value, something is wrong.
+			return (iU + iD + iL + iR) / 4.0;
+		}		
+	}
+
+	return float4(1.0);
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSIterativeSingle(v_in);
+	}
+}
