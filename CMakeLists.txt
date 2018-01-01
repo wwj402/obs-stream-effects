@@ -30,36 +30,9 @@ ENDIF()
 ################################################################################
 # Code
 ################################################################################
-SET(obs-stream-effects_HEADERS
-	"${PROJECT_SOURCE_DIR}/source/plugin.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-stroke.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-effect.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-texture.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertex.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
-	"${PROJECT_BINARY_DIR}/source/version.h"
-	"${PROJECT_SOURCE_DIR}/source/strings.h"
-	"${PROJECT_SOURCE_DIR}/source/util-distancefield-generator.h"
-	"${PROJECT_SOURCE_DIR}/source/util-math.h"
-)
-SET(obs-stream-effects_SOURCES
-	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-stroke.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
+
+# Utility
+SET(UTILITY_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-effect.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
@@ -71,6 +44,67 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-distancefield-generator.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
+)
+SET(UTILITY_HEADER
+	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-effect.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-texture.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertex.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
+	"${PROJECT_SOURCE_DIR}/source/util-distancefield-generator.h"
+	"${PROJECT_SOURCE_DIR}/source/util-math.h"
+)
+
+# Filters
+SET(FILTER_SOURCE
+	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-stroke.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
+)
+SET(FILTER_HEADER
+	"${PROJECT_SOURCE_DIR}/source/filter-displacement.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-blur.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-stroke.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
+)
+
+# Sources
+SET(SOURCE_SOURCE
+	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
+)
+SET(SOURCE_HEADER
+	"${PROJECT_SOURCE_DIR}/source/source-mirror.h"
+)
+
+# Transitions
+SET(TRANSITION_SOURCE
+)
+SET(TRANSITION_HEADER
+)
+
+# All
+SET(obs-stream-effects_HEADERS
+	${FILTER_HEADER}
+	${SOURCE_HEADER}
+	${TRANSITION_HEADER}
+	${UTILITY_HEADER}
+	"${PROJECT_SOURCE_DIR}/source/plugin.h"
+	"${PROJECT_BINARY_DIR}/source/version.h"
+	"${PROJECT_SOURCE_DIR}/source/strings.h"
+)
+SET(obs-stream-effects_SOURCES
+	${FILTER_SOURCE}
+	${SOURCE_SOURCE}
+	${TRANSITION_SOURCE}
+	${UTILITY_SOURCE}
+	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
 )
 SET(obs-stream-effects_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
@@ -84,12 +118,18 @@ SET(obs-stream-effects_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/signeddistancefield.effect"
 )
-SET(obs-stream-effects_LOCALE
-	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
-)
 SET(obs-stream-effects_LIBRARIES
 )
-#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Groups
+source_group("Source Files\\Filters" FILES ${FILTER_SOURCE})
+source_group("Header Files\\Filters" FILES ${FILTER_HEADER})
+source_group("Source Files\\Sources" FILES ${SOURCE_SOURCE})
+source_group("Header Files\\Sources" FILES ${SOURCE_HEADER})
+source_group("Source Files\\Transitions" FILES ${TRANSITION_SOURCE})
+source_group("Header Files\\Transitions" FILES ${TRANSITION_HEADER})
+source_group("Source Files\\Utility" FILES ${UTILITY_SOURCE})
+source_group("Header Files\\Utility" FILES ${UTILITY_HEADER})
 source_group("Data Files\\Locale" FILES ${obs-stream-effects_LOCALE})
 source_group("Data Files\\Effects" FILES ${obs-stream-effects_EFFECTS})
 
