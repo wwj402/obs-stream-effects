@@ -1,0 +1,32 @@
+language: cpp
+before_install:
+    - eval "${MATRIX_EVAL}"
+install: make get-deps cmake
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-8.2
+            - cmake-data
+            - cmake
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-7.0
+            - cmake-data
+            - cmake
+      env:
+        - MATRIX_EVAL="CC=clang-7.0 && CXX=clang++-7.0"
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc && brew install cmake && CC=gcc-8 && CXX=g++-8"
