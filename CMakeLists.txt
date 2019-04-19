@@ -21,8 +21,8 @@ Include("cmake/util.cmake")
 
 # Automatic Versioning
 Set(VERSION_MAJOR 0)
-Set(VERSION_MINOR 4)
-Set(VERSION_PATCH 2)
+Set(VERSION_MINOR 6)
+Set(VERSION_PATCH 1)
 Set(VERSION_TWEAK 0)
 Set(PROJECT_COMMIT "N/A")
 If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
@@ -56,7 +56,7 @@ PROJECT(
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 )
 set(PROJECT_FULL_NAME "Stream Effects for OBS Studio")
-set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OB Studio")
+set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OBS Studio")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
 set(PROJECT_COPYRIGHT_YEARS "2018")
 
@@ -97,14 +97,14 @@ configure_file(
 )
 
 # Windows
-## Installer (InnoSetup)
-Configure_File(
-	"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
-	"${PROJECT_BINARY_DIR}/installer.iss"
-)
-
-# Windows Specific Resource Definition
 if(WIN32)
+	## Installer (InnoSetup)
+	Configure_File(
+		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
+		"${PROJECT_BINARY_DIR}/installer.iss"
+	)
+
+	# Windows Specific Resource Definition
 	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
 	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
 	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
@@ -128,8 +128,20 @@ if(MSVC)
 	endif()
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 	# Update if necessary
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+	# GCC: -fpermissive is required as GCC does not allow the same template to be in different namespaces.
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -Wpedantic -fpermissive")
 endif()
+
+# C++ Standard and Extensions
+IF (CMAKE_VERSION VERSION_LESS "3.8")
+    SET(CMAKE_CXX_STANDARD 14)
+ELSEIF (CMAKE_VERSION VERSION_LESS "3.11")
+    SET(CMAKE_CXX_STANDARD 17)
+ELSE() # CMake 3.11 or higher:
+    SET(CMAKE_CXX_STANDARD 20)
+ENDIF()
+## Disable nonstandard extensions
+SET(CMAKE_CXX_EXTENSIONS OFF)
 
 ################################################################################
 # Options
@@ -194,7 +206,7 @@ elseif(${PropertyPrefix}OBS_PACKAGE)
 	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
 elseif(${PropertyPrefix}OBS_REFERENCE)
 	set(obsPath "${OBS_STUDIO_DIR}")
-	include("${OBS_STUDIO_DIR}/cmake/external/Findlibobs.cmake")
+	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
 elseif(${PropertyPrefix}OBS_DOWNLOAD)
 	download_project(
 		PROJ libobs
@@ -214,91 +226,150 @@ SET(PROJECT_DATA_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
 )
 SET(PROJECT_DATA_EFFECTS
-	"${PROJECT_SOURCE_DIR}/data/effects/blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/sdf-generator.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/sdf-shadow.effect"
+
+	# Blur
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/box.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/box-linear.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/dual-filtering.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian-linear.effect"
+
+	# Signed Distance Field
+	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-producer.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-consumer.effect"
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
-)
-SET(PROJECT_DATA_SHADERS_FILTER
 	"${PROJECT_SOURCE_DIR}/data/shaders/filter/example.effect"
 )
-SET(PROJECT_LIBRARIES
-)
-SET(PROJECT_PUBLIC
-)
-SET(PROJECT_PRIVATE
+SET(PROJECT_DATA
 	${PROJECT_DATA_LOCALE}
 	${PROJECT_DATA_EFFECTS}
 	${PROJECT_DATA_SHADERS}
-	${PROJECT_DATA_SHADERS_FILTER}
+)
+
+SET(PROJECT_LIBRARIES
+)
+
+SET(PROJECT_TEMPLATES
+	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
+	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
+)
+if(WIN32)
+	list(APPEND PROJECT_TEMPLATES
+		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
+		"${PROJECT_SOURCE_DIR}/cmake/version.rc.in"
+	)
+endif()
+
+SET(PROJECT_PUBLIC
+)
+SET(PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
-	"${PROJECT_SOURCE_DIR}/source/plugin.h"
+)
+SET(PROJECT_PRIVATE_SOURCE
+
+	# Plugin
+	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shadow-sdf.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shadow-sdf.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.h"
-	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.cpp"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.h"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.h"
-	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.h"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-effect.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-effect.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-limits.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-sampler.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-sampler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-texture.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertex.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertex.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.h"
-	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-tools.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-tools.cpp"
-	"${PROJECT_SOURCE_DIR}/source/strings.h"
-	"${PROJECT_SOURCE_DIR}/source/utility.h"
+	"${PROJECT_SOURCE_DIR}/source/strings.hpp"
+	"${PROJECT_SOURCE_DIR}/source/utility.hpp"
 	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-event.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-event.cpp"
-	"${PROJECT_SOURCE_DIR}/source/util-math.h"
+	"${PROJECT_SOURCE_DIR}/source/util-math.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
-	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
+	"${PROJECT_SOURCE_DIR}/source/util-memory.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-source.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-source.cpp"
+	
+	# Graphics
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.cpp"
+	# Graphics/Blur
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-base.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-base.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box-linear.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box-linear.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-dual-filtering.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-dual-filtering.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.cpp"
+
+	# OBS
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-indexbuffer.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-indexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-limits.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-mipmapper.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-mipmapper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-rendertarget.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-rendertarget.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-sampler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-sampler.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-texture.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-texture.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.cpp"
+	
+	# Sources
+	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.hpp"
+	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.cpp"
+
+	# Filters
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
+
+	# Transitions
+)
+set(PROJECT_PRIVATE
+	${PROJECT_DATA}
+	${PROJECT_PRIVATE_GENERATED}
+	${PROJECT_PRIVATE_SOURCE}
 )
 
-source_group("Data Files\\Locale" FILES ${PROJECT_DATA_LOCALE})
-source_group("Data Files\\Effects" FILES ${PROJECT_DATA_EFFECTS})
-source_group("Data Files\\Shaders" FILES ${PROJECT_DATA_SHADERS})
-source_group("Data Files\\Shaders\\Filter" FILES ${PROJECT_DATA_SHADERS_FILTER})
+source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
+source_group(TREE "${PROJECT_BINARY_DIR}/source" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
+source_group(TREE "${PROJECT_SOURCE_DIR}/cmake" PREFIX "Template Files" FILES ${PROJECT_TEMPLATES})
+
+# Filter Sources
+set(_TMP_SOURCE ${PROJECT_PRIVATE_SOURCE})
+list(FILTER _TMP_SOURCE INCLUDE REGEX "\.(c|cpp)$")
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source Files" FILES ${_TMP_SOURCE})
+
+# Filter Headers
+set(_TMP_HEADER ${PROJECT_PRIVATE_SOURCE})
+list(FILTER _TMP_HEADER INCLUDE REGEX "\.(h|hpp)$")
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Header Files" FILES ${_TMP_HEADER})
 
 ################################################################################
 # Target

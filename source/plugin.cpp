@@ -17,15 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-#include "plugin.h"
-#include "filter-blur.h"
-#include "filter-displacement.h"
-#include "filter-shape.h"
-#include "filter-transform.h"
-
-filter::Displacement* filterDisplacement;
-filter::Shape*        filterShape;
-filter::Transform*    filterTransform;
+#include "plugin.hpp"
+#include "obs/obs-source-tracker.hpp"
 
 std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;
@@ -34,6 +27,7 @@ MODULE_EXPORT bool obs_module_load(void)
 {
 	P_LOG_INFO("Loading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
 			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+	obs::source_tracker::initialize();
 	for (auto func : initializerFunctions) {
 		func();
 	}
@@ -47,13 +41,14 @@ MODULE_EXPORT void obs_module_unload(void)
 	for (auto func : finalizerFunctions) {
 		func();
 	}
+	obs::source_tracker::finalize();
 }
 
 #ifdef _WIN32
-#define NOMINMAX
-#define NOINOUT
-
+// Windows Only
+extern "C" {
 #include <windows.h>
+}
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
 {
