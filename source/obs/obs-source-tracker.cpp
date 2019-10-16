@@ -18,11 +18,12 @@
  */
 
 #include "obs-source-tracker.hpp"
+#include <stdexcept>
+#include "plugin.hpp"
 
 static std::shared_ptr<obs::source_tracker> source_tracker_instance;
 
-void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data)
-{
+void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data) noexcept try {
 	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
 
 	obs_source_t* target = nullptr;
@@ -43,12 +44,12 @@ void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data)
 		return;
 	}
 
-
-	self->source_map.insert({std::string(name), weak});
+	self->_source_map.insert({std::string(name), weak});
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
-{
+void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data) noexcept try {
 	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
 
 	obs_source_t* target = nullptr;
@@ -64,13 +65,48 @@ void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
 		return;
 	}
 
-	auto found = self->source_map.find(std::string(name));
-	if (found == self->source_map.end()) {
+	auto found = self->_source_map.find(std::string(name));
+	if (found == self->_source_map.end()) {
 		return;
 	}
 
 	obs_weak_source_release(found->second);
-	self->source_map.erase(found);
+	self->_source_map.erase(found);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data) noexcept try {
+	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
+
+	obs_source_t* target    = nullptr;
+	const char*   prev_name = nullptr;
+	const char*   new_name  = nullptr;
+	calldata_get_ptr(data, "source", &target);
+	calldata_get_string(data, "prev_name", &prev_name);
+	calldata_get_string(data, "new_name", &new_name);
+
+	if (strcmp(prev_name, new_name) == 0) {
+		// They weren't renamed at all, invalid event.
+		return;
+	}
+
+	auto found = self->_source_map.find(std::string(prev_name));
+	if (found == self->_source_map.end()) {
+		// Untracked source, insert.
+		obs_weak_source_t* weak = obs_source_get_weak_source(target);
+		if (!weak) {
+			return;
+		}
+		self->_source_map.insert({new_name, weak});
+		return;
+	}
+
+	// Insert at new key, remove old pair.
+	self->_source_map.insert({new_name, found->second});
+	self->_source_map.erase(found);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::source_tracker::initialize()
@@ -93,6 +129,7 @@ obs::source_tracker::source_tracker()
 	auto osi = obs_get_signal_handler();
 	signal_handler_connect(osi, "source_create", &source_create_handler, this);
 	signal_handler_connect(osi, "source_destroy", &source_destroy_handler, this);
+	signal_handler_connect(osi, "source_rename", &source_rename_handler, this);
 }
 
 obs::source_tracker::~source_tracker()
@@ -101,18 +138,20 @@ obs::source_tracker::~source_tracker()
 	if (osi) {
 		signal_handler_disconnect(osi, "source_create", &source_create_handler, this);
 		signal_handler_disconnect(osi, "source_destroy", &source_destroy_handler, this);
+		signal_handler_disconnect(osi, "source_rename", &source_rename_handler, this);
 	}
 
-	for (auto kv : this->source_map) {
+	for (auto kv : this->_source_map) {
 		obs_weak_source_release(kv.second);
 	}
-	this->source_map.clear();
+	this->_source_map.clear();
 }
 
-void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb) {
+void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
+{
 	// Need func-local copy, otherwise we risk corruption if a new source is created or destroyed.
-	auto source_map_copy = this->source_map;
-	for (auto kv : this->source_map) {
+	auto source_map_copy = this->_source_map;
+	for (auto kv : this->_source_map) {
 		obs_source_t* source = obs_weak_source_get_source(kv.second);
 		if (!source) {
 			continue;
@@ -136,29 +175,29 @@ void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb) {
 	}
 }
 
-bool obs::source_tracker::filter_sources(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_sources(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_audio_sources(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_audio_sources(std::string, obs_source_t* source)
 {
 	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_AUDIO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_video_sources(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_video_sources(std::string, obs_source_t* source)
 {
 	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_VIDEO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_transitions(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_transitions(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_TRANSITION);
 }
 
-bool obs::source_tracker::filter_scenes(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_scenes(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_SCENE);
 }

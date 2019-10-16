@@ -34,19 +34,18 @@
 
 namespace obs {
 	class source_tracker {
-		friend class std::_Ref_count_obj<obs::source_tracker>;
+		std::map<std::string, obs_weak_source_t*> _source_map;
 
-		std::map<std::string, obs_weak_source_t*> source_map;
-
-		static void source_create_handler(void* ptr, calldata_t* data);
-		static void source_destroy_handler(void* ptr, calldata_t* data);
+		static void source_create_handler(void* ptr, calldata_t* data) noexcept;
+		static void source_destroy_handler(void* ptr, calldata_t* data) noexcept;
+		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
 
 		public: // Singleton
 		static void                                 initialize();
 		static void                                 finalize();
 		static std::shared_ptr<obs::source_tracker> get();
 
-		private:
+		public:
 		source_tracker();
 		~source_tracker();
 

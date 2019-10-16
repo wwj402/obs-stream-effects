@@ -28,26 +28,26 @@
 namespace gfx {
 	namespace blur {
 		class dual_filtering_data {
-			std::shared_ptr<::gs::effect> m_effect;
+			std::shared_ptr<::gs::effect> _effect;
 
 			public:
 			dual_filtering_data();
-			~dual_filtering_data();
+			virtual ~dual_filtering_data();
 
 			std::shared_ptr<::gs::effect> get_effect();
 		};
 
 		class dual_filtering_factory : public ::gfx::blur::ifactory {
-			std::mutex                                      m_data_lock;
-			std::weak_ptr<::gfx::blur::dual_filtering_data> m_data;
+			std::mutex                                      _data_lock;
+			std::weak_ptr<::gfx::blur::dual_filtering_data> _data;
 
 			public:
 			dual_filtering_factory();
-			virtual ~dual_filtering_factory();
+			virtual ~dual_filtering_factory() override;
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
 
 			virtual double_t get_min_size(::gfx::blur::type type) override;
 
@@ -81,19 +81,19 @@ namespace gfx {
 			static ::gfx::blur::dual_filtering_factory& get();
 		};
 
-		class dual_filtering : public ::gfx::blur::ibase {
-			std::shared_ptr<::gfx::blur::dual_filtering_data> m_data;
+		class dual_filtering : public ::gfx::blur::base {
+			std::shared_ptr<::gfx::blur::dual_filtering_data> _data;
 
-			double_t m_size;
-			size_t   m_size_iterations;
+			double_t _size;
+			size_t   _size_iterations;
 
-			std::shared_ptr<gs::texture> m_input_texture;
+			std::shared_ptr<gs::texture> _input_texture;
 
-			std::vector<std::shared_ptr<gs::rendertarget>> m_rendertargets;
+			std::vector<std::shared_ptr<gs::rendertarget>> _rendertargets;
 
 			public:
 			dual_filtering();
-			virtual ~dual_filtering();
+			virtual ~dual_filtering() override;
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
 

@@ -20,13 +20,6 @@
 #pragma once
 #include <cstdlib>
 
-#ifdef _MSC_VER
-#define aligned_alloc(a, s) _aligned_malloc(s, a)
-#define aligned_free _aligned_free
-#else
-#define aligned_free free
-#endif
-
 namespace util {
 	inline size_t aligned_offset(size_t align, size_t pos)
 	{
@@ -38,9 +31,13 @@ namespace util {
 	template<typename T, size_t N = 16>
 	class AlignmentAllocator {
 		public:
-		typedef T              value_type;
-		typedef size_t         size_type;
+		typedef T      value_type;
+		typedef size_t size_type;
+#ifdef __clang__
+		typedef ptrdiff_t difference_type;
+#else
 		typedef std::ptrdiff_t difference_type;
+#endif
 
 		typedef T*       pointer;
 		typedef const T* const_pointer;
@@ -49,13 +46,13 @@ namespace util {
 		typedef const T& const_reference;
 
 		public:
-		inline AlignmentAllocator() throw() {}
+		inline AlignmentAllocator() {}
 
 		template<typename T2>
-		inline AlignmentAllocator(const AlignmentAllocator<T2, N>&) throw()
+		inline AlignmentAllocator(const AlignmentAllocator<T2, N>&)
 		{}
 
-		inline ~AlignmentAllocator() throw() {}
+		inline ~AlignmentAllocator() {}
 
 		inline pointer adress(reference r)
 		{
@@ -88,7 +85,7 @@ namespace util {
 			p;
 		}
 
-		inline size_type max_size() const throw()
+		inline size_type max_size() const
 		{
 			return size_type(-1) / sizeof(value_type);
 		}

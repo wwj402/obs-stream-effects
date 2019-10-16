@@ -16,18 +16,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # CMake Setup
-CMake_Minimum_Required(VERSION 3.1.0)
+CMake_Minimum_Required(VERSION 3.8.0)
 Include("cmake/util.cmake")
 
 # Automatic Versioning
-Set(VERSION_MAJOR 0)
-Set(VERSION_MINOR 6)
-Set(VERSION_PATCH 1)
-Set(VERSION_TWEAK 0)
-Set(PROJECT_COMMIT "N/A")
-If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
-	Set(GIT_RESULT "")
-	Set(GIT_OUTPUT "")
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 7)
+set(VERSION_PATCH 1)
+set(VERSION_TWEAK 0)
+set(PROJECT_COMMIT "N/A")
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
+	set(GIT_RESULT "")
+	set(GIT_OUTPUT "")
 	EXECUTE_PROCESS(
 		COMMAND git rev-list --count --topo-order ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}..HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -35,9 +35,9 @@ If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 		OUTPUT_VARIABLE GIT_OUTPUT
 		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
 	)
-	If(GIT_RESULT EQUAL 0)
-		Set(VERSION_TWEAK ${GIT_OUTPUT})
-	EndIf()
+	if(GIT_RESULT EQUAL 0)
+		set(VERSION_TWEAK ${GIT_OUTPUT})
+	endif()
 	EXECUTE_PROCESS(
 		COMMAND git rev-parse HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -45,10 +45,10 @@ If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 		OUTPUT_VARIABLE GIT_OUTPUT
 		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
 	)
-	If(GIT_RESULT EQUAL 0)
-		Set(PROJECT_COMMIT ${GIT_OUTPUT})
-	EndIf()
-EndIf()
+	if(GIT_RESULT EQUAL 0)
+		set(PROJECT_COMMIT ${GIT_OUTPUT})
+	endif()
+endif()
 
 # Define Project
 PROJECT(
@@ -58,7 +58,7 @@ PROJECT(
 set(PROJECT_FULL_NAME "Stream Effects for OBS Studio")
 set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OBS Studio")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
-set(PROJECT_COPYRIGHT_YEARS "2018")
+set(PROJECT_COPYRIGHT_YEARS "2018 - 2019")
 
 ################################################################################
 # Setup / Bootstrap
@@ -82,6 +82,40 @@ endif()
 # Search Path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
+# All Warnings, Extra Warnings, Pedantic
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	# using Clang
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-missing-braces -Wmissing-field-initializers -Wno-c++98-compat-pedantic -Wold-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-covered-switch-default -Wno-switch-enum")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-missing-braces -Wmissing-field-initializers -Wno-c++98-compat-pedantic -Wold-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-covered-switch-default -Wno-switch-enum")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# GCC: -fpermissive is required as GCC does not allow the same template to be in different namespaces.
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -fpermissive -Wno-long-long -Wno-missing-braces -Wmissing-field-initializers")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -fpermissive -Wno-long-long -Wno-missing-braces -Wmissing-field-initializers")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+	# using Intel C++
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	set(MSVC_EXTRA_FLAGS "/wd4061 /wd4100 /wd4180 /wd4201 /wd4464 /wd4514 /wd4571 /wd4623 /wd4625 /wd4626 /wd4710 /wd4774 /wd4820 /wd5026 /wd5027 /wd5045")
+	# Force to always compile with W4
+	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
+	endif()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_EXTRA_FLAGS}")
+	
+	if(CMAKE_C_FLAGS MATCHES "/W[0-4]")
+		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+	else()
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Wall")
+	endif()
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MSVC_EXTRA_FLAGS}")
+endif()
+
+# C++ Standard and Extensions
+## Use C++17 and no non-standard extensions.
+set(_CXX_STANDARD 17)
+set(_CXX_EXTENSIONS OFF)
+
 ################################################################################
 # CMake / Compiler
 ################################################################################
@@ -99,7 +133,7 @@ configure_file(
 # Windows
 if(WIN32)
 	## Installer (InnoSetup)
-	Configure_File(
+	configure_file(
 		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
 		"${PROJECT_BINARY_DIR}/installer.iss"
 	)
@@ -118,31 +152,6 @@ if(WIN32)
 	)	
 endif()
 
-# All Warnings, Extra Warnings, Pedantic
-if(MSVC)
-	# Force to always compile with W4
-	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-		string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-	else()
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-	endif()
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-	# Update if necessary
-	# GCC: -fpermissive is required as GCC does not allow the same template to be in different namespaces.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -Wpedantic -fpermissive")
-endif()
-
-# C++ Standard and Extensions
-IF (CMAKE_VERSION VERSION_LESS "3.8")
-    SET(CMAKE_CXX_STANDARD 14)
-ELSEIF (CMAKE_VERSION VERSION_LESS "3.11")
-    SET(CMAKE_CXX_STANDARD 17)
-ELSE() # CMake 3.11 or higher:
-    SET(CMAKE_CXX_STANDARD 20)
-ENDIF()
-## Disable nonstandard extensions
-SET(CMAKE_CXX_EXTENSIONS OFF)
-
 ################################################################################
 # Options
 ################################################################################
@@ -154,7 +163,7 @@ mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
 
 if(NOT TARGET libobs)
 	set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
-	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "22.0.2" CACHE STRING "OBS Studio Version to download")
+	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.0-rc2-ci" CACHE STRING "OBS Studio Version to download")
 endif()
 
 if(NOT ${PropertyPrefix}OBS_NATIVE)
@@ -183,7 +192,7 @@ else()
 	else()
 		message(STATUS "${PROJECT_NAME}: No OBS Studio detected, using downloadable prebuilt binaries.")
 		CacheSet(${PropertyPrefix}OBS_DOWNLOAD TRUE)
-		set(${PropertyPrefix}OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-vs2017.7z")
+		set(${PropertyPrefix}OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-vs2017.7z")
 	endif()
 endif()
 
@@ -191,17 +200,9 @@ endif()
 if(${PropertyPrefix}OBS_DOWNLOAD)
 	include("cmake/DownloadProject.cmake")
 endif()
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	include("cmake/cppcheck.cmake")
-endif()
 
 # Load OBS Studio
 if(${PropertyPrefix}OBS_NATIVE)
-	option(BUILD_FFMPEG_ENCODER "Build AMD Encoder module" ON)	
-	if (NOT BUILD_FFMPEG_ENCODER)
-		message(STATUS "Not building AMD Encoder")
-		return()
-	endif()
 elseif(${PropertyPrefix}OBS_PACKAGE)
 	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
 elseif(${PropertyPrefix}OBS_REFERENCE)
@@ -222,11 +223,13 @@ endif()
 ################################################################################
 # Code
 ################################################################################
-SET(PROJECT_DATA_LOCALE
+set(PROJECT_DATA_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
 )
-SET(PROJECT_DATA_EFFECTS
+set(PROJECT_DATA_EFFECTS
+	"${PROJECT_SOURCE_DIR}/data/effects/channel-mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/color-grade.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
@@ -242,20 +245,20 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-producer.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-consumer.effect"
 )
-SET(PROJECT_DATA_SHADERS
+set(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
 	"${PROJECT_SOURCE_DIR}/data/shaders/filter/example.effect"
 )
-SET(PROJECT_DATA
+set(PROJECT_DATA
 	${PROJECT_DATA_LOCALE}
 	${PROJECT_DATA_EFFECTS}
 	${PROJECT_DATA_SHADERS}
 )
 
-SET(PROJECT_LIBRARIES
+set(PROJECT_LIBRARIES
 )
 
-SET(PROJECT_TEMPLATES
+set(PROJECT_TEMPLATES
 	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
 	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
 )
@@ -266,13 +269,13 @@ if(WIN32)
 	)
 endif()
 
-SET(PROJECT_PUBLIC
+set(PROJECT_PUBLIC
 )
-SET(PROJECT_PRIVATE_GENERATED
+set(PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
-SET(PROJECT_PRIVATE_SOURCE
+set(PROJECT_PRIVATE_SOURCE
 
 	# Plugin
 	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
@@ -336,16 +339,22 @@ SET(PROJECT_PRIVATE_SOURCE
 	# Sources
 	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.hpp"
 	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.cpp"
+	"${PROJECT_SOURCE_DIR}/source/sources/source-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/sources/source-shader.cpp"
 
 	# Filters
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
 
@@ -355,6 +364,7 @@ set(PROJECT_PRIVATE
 	${PROJECT_DATA}
 	${PROJECT_PRIVATE_GENERATED}
 	${PROJECT_PRIVATE_SOURCE}
+	${PROJECT_TEMPLATES}
 )
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
@@ -426,6 +436,7 @@ if (WIN32)
 	target_compile_definitions(${PROJECT_NAME}
 		PRIVATE
 			_CRT_SECURE_NO_WARNINGS
+			_ENABLE_EXTENDED_ALIGNED_STORAGE
 			# windows.h
 			WIN32_LEAN_AND_MEAN
 			NOGPICAPMASKS
@@ -472,6 +483,14 @@ if (WIN32)
 	)
 endif()
 
+# C++ Standard and Extensions
+set_target_properties(
+	${PROJECT_NAME}
+	PROPERTIES
+		CXX_STANDARD ${_CXX_STANDARD}
+		CXX_EXTENSIONS ${_CXX_EXTENSIONS}
+)
+
 # File Version
 if(WIN32)
 	set_target_properties(
@@ -487,24 +506,6 @@ else()
 		VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 		SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 	)
-endif()
-
-# CPPCheck
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	set(excludes )
-	list(APPEND excludes "${OBS_DEPENDENCIES_DIR}")
-	if(${PropertyPrefix}OBS_REFERENCE)
-		list(APPEND excludes "${OBS_STUDIO_DIR}/libobs")
-	elseif(${PropertyPrefix}OBS_PACKAGE)
-		list(APPEND excludes "${OBS_STUDIO_DIR}/libobs")
-	elseif(${PropertyPrefix}OBS_DOWNLOAD)
-		list(APPEND excludes "${libobs_SOURCE_DIR}")
-	endif()
-
-	cppcheck(
-		EXCLUDE ${excludes}
-	)
-	cppcheck_add_project(${PROJECT_NAME})
 endif()
 
 ################################################################################

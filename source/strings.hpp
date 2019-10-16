@@ -20,14 +20,17 @@
 #pragma once
 #include "plugin.hpp"
 
-#define P_TRANSLATE(x) obs_module_text(x)
-#define P_DESC(x) x ".Description"
+#define PLUGIN_NAME "Stream Effects"
 
-#define T_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
-#define T_FILEFILTERS_VIDEO "*.mkv *.webm *.mp4 *.mov *.flv"
-#define T_FILEFILTERS_SOUND "*.ogg *.flac *.mp3 *.wav"
-#define T_FILEFILTERS_EFFECT "*.effect *.txt"
-#define T_FILEFILTERS_ANY "*.*"
+#define D_TRANSLATE(x) obs_module_text(x)
+#define D_DESC(x) x ".Description"
+
+#define S_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
+#define S_FILEFILTERS_TEXTURE S_FILEFILTERS_IMAGE " *.dds"
+#define S_FILEFILTERS_VIDEO "*.mkv *.webm *.mp4 *.mov *.flv"
+#define S_FILEFILTERS_SOUND "*.ogg *.flac *.mp3 *.wav"
+#define S_FILEFILTERS_EFFECT "*.effect *.txt"
+#define S_FILEFILTERS_ANY "*.*"
 
 #define S_VERSION "Version"
 
@@ -41,6 +44,15 @@
 #define S_FILETYPE_SOUNDS "FileType.Sounds"
 #define S_FILETYPE_EFFECT "FileType.Effect"
 #define S_FILETYPE_EFFECTS "FileType.Effects"
+
+#define S_SOURCETYPE_SOURCE "SourceType.Source"
+#define S_SOURCETYPE_SCENE "SourceType.Scene"
+
+#define S_ALIGNMENT_CENTER "Alignment.Center"
+#define S_ALIGNMENT_LEFT "Alignment.Left"
+#define S_ALIGNMENT_RIGHT "Alignment.Right"
+#define S_ALIGNMENT_TOP "Alignment.Top"
+#define S_ALIGNMENT_BOTTOM "Alignment.Bottom"
 
 #define S_BLUR_TYPE_BOX "Blur.Type.Box"
 #define S_BLUR_TYPE_BOX_LINEAR "Blur.Type.BoxLinear"
@@ -61,3 +73,10 @@
 #define S_MIPGENERATOR_BICUBIC "MipGenerator.Bicubic"
 #define S_MIPGENERATOR_LANCZOS "MipGenerator.Lanczos"
 #define S_MIPGENERATOR_INTENSITY "MipGenerator.Intensity"
+
+#define S_CHANNEL_RED "Channel.Red"
+#define S_CHANNEL_GREEN "Channel.Green"
+#define S_CHANNEL_BLUE "Channel.Blue"
+#define S_CHANNEL_ALPHA "Channel.Alpha"
+
+

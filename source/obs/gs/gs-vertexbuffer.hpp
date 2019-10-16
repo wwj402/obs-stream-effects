@@ -36,6 +36,24 @@
 
 namespace gs {
 	class vertex_buffer {
+		uint32_t _size;
+		uint32_t _capacity;
+		uint32_t _layers;
+
+		// Memory Storage
+		vec3*     _positions;
+		vec3*     _normals;
+		vec3*     _tangents;
+		uint32_t* _colors;
+		vec4*     _uvs[MAXIMUM_UVW_LAYERS];
+
+		// OBS GS Data
+		gs_vb_data*      _data;
+		gs_vertbuffer_t* _buffer;
+		gs_tvertarray*   _layer_data;
+
+		void initialize(size_t capacity, size_t layers);
+
 		public:
 		virtual ~vertex_buffer();
 
@@ -93,7 +111,7 @@ namespace gs {
 		*
 		* \param other
 		*/
-		vertex_buffer(vertex_buffer const&& other);
+		vertex_buffer(vertex_buffer const&& other) noexcept;
 
 		/*!
 		* \brief Move Assignment
@@ -101,7 +119,7 @@ namespace gs {
 		*
 		* \param other
 		*/
-		void operator=(vertex_buffer const&& other);
+		void operator=(vertex_buffer const&& other) noexcept;
 
 		void resize(uint32_t new_size);
 
@@ -160,22 +178,5 @@ namespace gs {
 		gs_vertbuffer_t* update();
 
 		gs_vertbuffer_t* update(bool refreshGPU);
-
-		private:
-		uint32_t m_size;
-		uint32_t m_capacity;
-		uint32_t m_layers;
-
-		// Memory Storage
-		vec3*     m_positions;
-		vec3*     m_normals;
-		vec3*     m_tangents;
-		uint32_t* m_colors;
-		vec4*     m_uvs[MAXIMUM_UVW_LAYERS];
-
-		// OBS GS Data
-		gs_vb_data*      m_vertexbufferdata;
-		gs_vertbuffer_t* m_vertexbuffer;
-		gs_tvertarray*   m_layerdata;
 	};
 } // namespace gs

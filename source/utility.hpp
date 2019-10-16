@@ -19,6 +19,15 @@
 
 #pragma once
 #include <type_traits>
+#include <cinttypes>
+#include <limits>
+
+extern "C" {
+#include <obs-config.h>
+#include <obs.h>
+}
+
+const char* obs_module_recursive_text(const char* to_translate, size_t depth = std::numeric_limits<size_t>::max());
 
 template<typename Enum>
 struct enable_bitmask_operators {
@@ -39,47 +48,18 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 	return static_cast<Enum>(static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
 }
 
-#define ENABLE_BITMASK_OPERATORS(x)      \
+#define P_ENABLE_BITMASK_OPERATORS(x)      \
 	template<>                           \
 	struct enable_bitmask_operators<x> { \
 		static const bool enable = true; \
 	};
 
-#define vstr(s) dstr(s)
-#define dstr(s) #s
+#define D_STR(s) #s
+#define D_VSTR(s) D_STR(s)
 
-#ifndef __FUNCTION_NAME__
-#if defined(_WIN32) || defined(_WIN64) //WINDOWS
-#define __FUNCTION_NAME__ __FUNCTION__
-#else //*NIX
-#define __FUNCTION_NAME__ __func__
-#endif
-#endif
-
-#ifdef __cplusplus
-#define INITIALIZER(f)   \
-	static void f(void); \
-	struct f##_t_ {      \
-		f##_t_(void)     \
-		{                \
-			f();         \
-		}                \
-	};                   \
-	static f##_t_ f##_;  \
-	static void   f(void)
-#elif defined(_MSC_VER)
-#pragma section(".CRT$XCU", read)
-#define INITIALIZER2_(f, p)                                  \
-	static void f(void);                                     \
-	__declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
-	__pragma(comment(linker, "/include:" p #f "_")) static void f(void)
-#ifdef _WIN64
-#define INITIALIZER(f) INITIALIZER2_(f, "")
-#else
-#define INITIALIZER(f) INITIALIZER2_(f, "_")
-#endif
-#else
-#define INITIALIZER(f)                                \
-	static void f(void) __attribute__((constructor)); \
-	static void f(void)
-#endif
+namespace util {
+	bool inline are_property_groups_broken()
+	{
+		return obs_get_version() < MAKE_SEMANTIC_VERSION(24, 0, 0);
+	}
+}

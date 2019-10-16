@@ -34,18 +34,10 @@
 #pragma warning(pop)
 #endif
 
-#define S_FILTER_DISPLACEMENT "Filter.Displacement"
-#define S_FILTER_DISPLACEMENT_FILE "Filter.Displacement.File"
-#define S_FILTER_DISPLACEMENT_FILE_TYPES "Filter.Displacement.File.Types"
-#define S_FILTER_DISPLACEMENT_RATIO "Filter.Displacement.Ratio"
-#define S_FILTER_DISPLACEMENT_SCALE "Filter.Displacement.Scale"
-
 namespace filter {
 	namespace displacement {
 		class displacement_factory {
-			friend class std::_Ptr_base<filter::displacement::displacement_factory>;
-
-			obs_source_info sourceInfo;
+			obs_source_info _source_info;
 
 			public: // Singleton
 			static void                                  initialize();
@@ -55,40 +47,23 @@ namespace filter {
 			public:
 			displacement_factory();
 			~displacement_factory();
-
-			static const char* get_name(void*);
-
-			static void*             create(obs_data_t*, obs_source_t*);
-			static void              destroy(void*);
-			static uint32_t          get_width(void*);
-			static uint32_t          get_height(void*);
-			static void              get_defaults(obs_data_t*);
-			static obs_properties_t* get_properties(void*);
-			static void              update(void*, obs_data_t*);
-			static void              activate(void*);
-			static void              deactivate(void*);
-			static void              show(void*);
-			static void              hide(void*);
-			static void              video_tick(void*, float);
-			static void              video_render(void*, gs_effect_t*);
 		};
 
 		class displacement_instance {
-			obs_source_t* m_self;
-			bool          m_active;
-			float_t       m_timer;
+			obs_source_t* _self;
+			float_t       _timer;
 
 			// Rendering
-			std::shared_ptr<gs::effect> m_effect;
-			float_t                     m_distance;
-			vec2                        m_displacement_scale;
+			std::shared_ptr<gs::effect> _effect;
+			float_t                     _distance;
+			vec2                        _displacement_scale;
 
 			// Displacement Map
-			std::string                  m_file_name;
-			std::shared_ptr<gs::texture> m_file_texture;
-			time_t                       m_file_create_time;
-			time_t                       m_file_modified_time;
-			size_t                       m_file_size;
+			std::string                  _file_name;
+			std::shared_ptr<gs::texture> _file_texture;
+			time_t                       _file_create_time;
+			time_t                       _file_modified_time;
+			size_t                       _file_size;
 
 			void validate_file_texture(std::string file);
 

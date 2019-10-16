@@ -7,13 +7,18 @@ matrix:
 # Build Image & Environment
 platform: x64
 
+# Build Tags only
+skip_non_tags: true
+
 image:
   - Visual Studio 2017
 
 environment:
   CMAKE_SYSTEM_VERSION: 10.0.17134.0
-  PACKAGE_PREFIX: amd-encoder-for-obs-studio
-  INNOSETUP_URL: http://www.jrsoftware.org/download.php/is-unicode.exe
+  CMAKE_GENERATOR_32: "Visual Studio 15 2017"
+  CMAKE_GENERATOR_64: "Visual Studio 15 2017 Win64"
+  PACKAGE_PREFIX: obs-stream-effects
+  INNOSETUP_URL: http://www.jrsoftware.org/download.php/is.exe
   CURL_VERSION: 7.39.0
 
 # Resource Cache
@@ -28,15 +33,21 @@ cache:
 branches:
   except:
     - /i18n_.*/
+    - /i18n_master/
+    - i18n_master
+    - /l10n_.*/
+    - /l10n_master/
+    - l10n_master
 
 # Building  
 install:
 - cmd: ci/appveyor-install.bat
 
 build_script:
-- cmd: node ci/appveyor-build.js
+- cmd: node ci/builder.js
 
 after_build:
+- cmd: node ci/packager.js
 - cmd: ci/appveyor-package.bat
 
 # Testing

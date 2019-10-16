@@ -43,9 +43,7 @@
 namespace source {
 	namespace mirror {
 		class mirror_factory {
-			friend class std::_Ptr_base<source::mirror::mirror_factory>;
-
-			obs_source_info osi;
+			obs_source_info _source_info;
 
 			public: // Singleton
 			static void                            initialize();
@@ -56,66 +54,68 @@ namespace source {
 			mirror_factory();
 			~mirror_factory();
 
-			static const char*       get_name(void*);
-			static void              get_defaults(obs_data_t*);
-			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
-			static obs_properties_t* get_properties(void*);
+			static const char*       get_name(void*) noexcept;
+			static void              get_defaults(obs_data_t*) noexcept;
+			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*) noexcept;
+			static obs_properties_t* get_properties(void*) noexcept;
 
-			static void* create(obs_data_t*, obs_source_t*);
-			static void  destroy(void*);
+			static void* create(obs_data_t*, obs_source_t*) noexcept;
+			static void  destroy(void*) noexcept;
 
-			static uint32_t get_width(void*);
-			static uint32_t get_height(void*);
+			static uint32_t get_width(void*) noexcept;
+			static uint32_t get_height(void*) noexcept;
 
-			static void update(void*, obs_data_t*);
-			static void activate(void*);
-			static void deactivate(void*);
-			static void video_tick(void*, float);
-			static void video_render(void*, gs_effect_t*);
-			static void enum_active_sources(void*, obs_source_enum_proc_t, void*);
-			static void load(void*, obs_data_t*);
-			static void save(void*, obs_data_t*);
+			static void update(void*, obs_data_t*) noexcept;
+			static void activate(void*) noexcept;
+			static void deactivate(void*) noexcept;
+			static void video_tick(void*, float) noexcept;
+			static void video_render(void*, gs_effect_t*) noexcept;
+			static void enum_active_sources(void*, obs_source_enum_proc_t, void*) noexcept;
+			static void load(void*, obs_data_t*) noexcept;
+			static void save(void*, obs_data_t*) noexcept;
 		};
 
 		struct mirror_audio_data {
-			obs_source_audio                  audio;
+			obs_source_audio                  audio = {};
 			std::vector<std::vector<float_t>> data;
 		};
 
 		class mirror_instance {
-			bool          m_active;
-			obs_source_t* m_self;
-			float_t       m_tick;
+			obs_source_t* _self;
+			bool          _active;
+			float_t       _tick;
 
 			// Video Rendering
-			std::shared_ptr<obs::source>         m_scene;
-			std::shared_ptr<gfx::source_texture> m_scene_texture_renderer;
-			std::shared_ptr<gs::texture>         m_scene_texture;
-			bool                                 m_scene_rendered;
+			std::shared_ptr<obs::source>         _scene;
+			std::shared_ptr<gfx::source_texture> _scene_texture_renderer;
+			std::shared_ptr<gs::texture>         _scene_texture;
+			bool                                 _scene_rendered;
+			uint32_t                             _rescale_alignment;
 
 			// Rescaling
-			bool            m_rescale_enabled;
-			uint32_t        m_rescale_width;
-			uint32_t        m_rescale_height;
-			bool            m_rescale_keep_orig_size;
-			obs_scale_type  m_rescale_type;
-			obs_bounds_type m_rescale_bounds;
+			bool            _rescale_enabled;
+			uint32_t        _rescale_width;
+			uint32_t        _rescale_height;
+			bool            _rescale_keep_orig_size;
+			obs_scale_type  _rescale_type;
+			obs_bounds_type _rescale_bounds;
 
 			// Audio Rendering
-			bool                                           m_audio_enabled;
-			std::condition_variable                        m_audio_notify;
-			std::thread                                    m_audio_thread;
-			bool                                           m_audio_kill_thread;
-			bool                                           m_audio_have_output;
-			std::mutex                                     m_audio_lock_outputter;
-			std::mutex                                     m_audio_lock_capturer;
-			std::queue<std::shared_ptr<mirror_audio_data>> m_audio_data_queue;
-			std::queue<std::shared_ptr<mirror_audio_data>> m_audio_data_free_queue;
+			bool                                           _audio_enabled;
+			std::condition_variable                        _audio_notify;
+			std::thread                                    _audio_thread;
+			bool                                           _audio_kill_thread;
+			bool                                           _audio_have_output;
+			std::mutex                                     _audio_lock_outputter;
+			std::mutex                                     _audio_lock_capturer;
+			std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_queue;
+			std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_free_queue;
+			speaker_layout                                 _audio_layout;
 
 			// Input
-			std::shared_ptr<obs::source> m_source;
-			obs_sceneitem_t*             m_source_item;
-			std::string                  m_source_name;
+			std::shared_ptr<obs::source> _source;
+			obs_sceneitem_t*             _source_item;
+			std::string                  _source_name;
 
 			private:
 			void release_input();
@@ -133,7 +133,7 @@ namespace source {
 			void deactivate();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
-			void audio_output_cb();
+			void audio_output_cb() noexcept;
 			void enum_active_sources(obs_source_enum_proc_t, void*);
 			void load(obs_data_t*);
 			void save(obs_data_t*);

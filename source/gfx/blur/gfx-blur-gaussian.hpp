@@ -26,12 +26,12 @@
 namespace gfx {
 	namespace blur {
 		class gaussian_data {
-			std::shared_ptr<::gs::effect>     m_effect;
-			std::vector<std::vector<float_t>> m_kernels;
+			std::shared_ptr<::gs::effect>     _effect;
+			std::vector<std::vector<float_t>> _kernels;
 
 			public:
 			gaussian_data();
-			~gaussian_data();
+			virtual ~gaussian_data();
 
 			std::shared_ptr<::gs::effect> get_effect();
 
@@ -39,16 +39,16 @@ namespace gfx {
 		};
 
 		class gaussian_factory : public ::gfx::blur::ifactory {
-			std::mutex                                m_data_lock;
-			std::weak_ptr<::gfx::blur::gaussian_data> m_data;
+			std::mutex                                _data_lock;
+			std::weak_ptr<::gfx::blur::gaussian_data> _data;
 
 			public:
 			gaussian_factory();
-			virtual ~gaussian_factory();
+			virtual ~gaussian_factory() override;
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
 
 			virtual double_t get_min_size(::gfx::blur::type type) override;
 
@@ -82,21 +82,21 @@ namespace gfx {
 			static ::gfx::blur::gaussian_factory& get();
 		};
 
-		class gaussian : public ::gfx::blur::ibase {
+		class gaussian : public ::gfx::blur::base {
 			protected:
-			std::shared_ptr<::gfx::blur::gaussian_data> m_data;
+			std::shared_ptr<::gfx::blur::gaussian_data> _data;
 
-			double_t                            m_size;
-			std::pair<double_t, double_t>       m_step_scale;
-			std::shared_ptr<::gs::texture>      m_input_texture;
-			std::shared_ptr<::gs::rendertarget> m_rendertarget;
+			double_t                            _size;
+			std::pair<double_t, double_t>       _step_scale;
+			std::shared_ptr<::gs::texture>      _input_texture;
+			std::shared_ptr<::gs::rendertarget> _rendertarget;
 
 			private:
-			std::shared_ptr<::gs::rendertarget> m_rendertarget2;
+			std::shared_ptr<::gs::rendertarget> _rendertarget2;
 
 			public:
 			gaussian();
-			virtual ~gaussian();
+			virtual ~gaussian() override;
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
 
@@ -119,12 +119,12 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> get() override;
 		};
 
-		class gaussian_directional : public ::gfx::blur::gaussian, public ::gfx::blur::ibase_angle {
+		class gaussian_directional : public ::gfx::blur::gaussian, public ::gfx::blur::base_angle {
 			double_t m_angle;
 
 			public:
 			gaussian_directional();
-			virtual ~gaussian_directional();
+			virtual ~gaussian_directional() override;
 
 			virtual ::gfx::blur::type get_type() override;
 
@@ -135,8 +135,8 @@ namespace gfx {
 		};
 
 		class gaussian_rotational : public ::gfx::blur::gaussian,
-									public ::gfx::blur::ibase_angle,
-									public ::gfx::blur::ibase_center {
+									public ::gfx::blur::base_angle,
+									public ::gfx::blur::base_center {
 			std::pair<double_t, double_t> m_center;
 			double_t                      m_angle;
 
@@ -152,7 +152,7 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> render() override;
 		};
 
-		class gaussian_zoom : public ::gfx::blur::gaussian, public ::gfx::blur::ibase_center {
+		class gaussian_zoom : public ::gfx::blur::gaussian, public ::gfx::blur::base_center {
 			std::pair<double_t, double_t> m_center;
 
 			public:

@@ -29,9 +29,7 @@
 namespace filter {
 	namespace transform {
 		class transform_factory {
-			friend class std::_Ptr_base<filter::transform::transform_factory>;
-
-			obs_source_info sourceInfo;
+			obs_source_info _source_info;
 
 			public: // Singleton
 			static void                               initialize();
@@ -42,56 +40,56 @@ namespace filter {
 			transform_factory();
 			~transform_factory();
 
-			static const char*       get_name(void*);
-			static void              get_defaults(obs_data_t*);
-			static obs_properties_t* get_properties(void*);
-			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
+			static const char*       get_name(void*) noexcept;
+			static void              get_defaults(obs_data_t*) noexcept;
+			static obs_properties_t* get_properties(void*) noexcept;
+			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*) noexcept;
 
-			static void*    create(obs_data_t*, obs_source_t*);
-			static void     destroy(void*);
-			static uint32_t get_width(void*);
-			static uint32_t get_height(void*);
-			static void     update(void*, obs_data_t*);
-			static void     activate(void*);
-			static void     deactivate(void*);
-			static void     show(void*);
-			static void     hide(void*);
-			static void     video_tick(void*, float);
-			static void     video_render(void*, gs_effect_t*);
+			static void*    create(obs_data_t*, obs_source_t*) noexcept;
+			static void     destroy(void*) noexcept;
+			static uint32_t get_width(void*) noexcept;
+			static uint32_t get_height(void*) noexcept;
+			static void     update(void*, obs_data_t*) noexcept;
+			static void     activate(void*) noexcept;
+			static void     deactivate(void*) noexcept;
+			static void     show(void*) noexcept;
+			static void     hide(void*) noexcept;
+			static void     video_tick(void*, float) noexcept;
+			static void     video_render(void*, gs_effect_t*) noexcept;
 		};
 
 		class transform_instance {
-			bool          m_active;
-			obs_source_t* m_self;
+			bool          _active;
+			obs_source_t* _self;
 
 			// Input
-			std::shared_ptr<gs::rendertarget> m_source_rendertarget;
-			std::shared_ptr<gs::texture>      m_source_texture;
-			bool                              m_source_rendered;
-			std::pair<uint32_t, uint32_t>     m_source_size;
+			std::shared_ptr<gs::rendertarget> _source_rendertarget;
+			std::shared_ptr<gs::texture>      _source_texture;
+			bool                              _source_rendered;
+			std::pair<uint32_t, uint32_t>     _source_size;
 
 			// Mipmapping
-			bool                     m_mipmap_enabled;
-			double_t                 m_mipmap_strength;
-			gs::mipmapper::generator m_mipmap_generator;
-			gs::mipmapper            m_mipmapper;
+			bool                     _mipmap_enabled;
+			double_t                 _mipmap_strength;
+			gs::mipmapper::generator _mipmap_generator;
+			gs::mipmapper            _mipmapper;
 
 			// Rendering
-			std::shared_ptr<gs::rendertarget> m_shape_rendertarget;
-			std::shared_ptr<gs::texture>      m_shape_texture;
+			std::shared_ptr<gs::rendertarget> _shape_rendertarget;
+			std::shared_ptr<gs::texture>      _shape_texture;
 
 			// Mesh
-			bool                               m_update_mesh;
-			std::shared_ptr<gs::vertex_buffer> m_vertex_buffer;
-			uint32_t                           m_rotation_order;
-			std::unique_ptr<util::vec3a>       m_position;
-			std::unique_ptr<util::vec3a>       m_rotation;
-			std::unique_ptr<util::vec3a>       m_scale;
-			std::unique_ptr<util::vec3a>       m_shear;
+			bool                               _update_mesh;
+			std::shared_ptr<gs::vertex_buffer> _vertex_buffer;
+			uint32_t                           _rotation_order;
+			std::unique_ptr<util::vec3a>       _position;
+			std::unique_ptr<util::vec3a>       _rotation;
+			std::unique_ptr<util::vec3a>       _scale;
+			std::unique_ptr<util::vec3a>       _shear;
 
 			// Camera
-			bool    m_camera_orthographic;
-			float_t m_camera_fov;
+			bool    _camera_orthographic;
+			float_t _camera_fov;
 
 			public:
 			~transform_instance();

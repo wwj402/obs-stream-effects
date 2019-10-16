@@ -36,14 +36,14 @@
 #endif
 
 // Constants
-#define PI 3.1415926535897932384626433832795        // PI = pi
-#define PI2 6.283185307179586476925286766559        // 2PI = 2 * pi
-#define PI2_SQROOT 2.506628274631000502415765284811 // sqrt(2 * pi)
+#define S_PI 3.1415926535897932384626433832795        // PI = pi
+#define S_PI2 6.283185307179586476925286766559        // 2PI = 2 * pi
+#define S_PI2_SQROOT 2.506628274631000502415765284811 // sqrt(2 * pi)
 
-#define V_RAD 57.295779513082320876798154814105  // 180/pi
-#define V_DEG 0.01745329251994329576923690768489 // pi/180
-#define DEG_TO_RAD(x) (x * V_DEG)
-#define RAD_TO_DEG(x) (x * V_RAD)
+#define S_RAD 57.295779513082320876798154814105  // 180/pi
+#define S_DEG 0.01745329251994329576923690768489 // pi/180
+#define D_DEG_TO_RAD(x) (x * S_DEG)
+#define D_RAD_TO_DEG(x) (x * S_RAD)
 
 inline size_t GetNearestPowerOfTwoAbove(size_t v)
 {
@@ -86,7 +86,7 @@ namespace util {
 		static void  operator delete[](void* p);
 	};
 
-	std::pair<int64_t, int64_t> SizeFromString(std::string text, bool allowSquare = true);
+	std::pair<int64_t, int64_t> size_from_string(std::string text, bool allowSquare = true);
 
 	namespace math {
 		// Proven by tests to be the fastest implementation on Intel and AMD CPUs.
@@ -104,7 +104,7 @@ namespace util {
 		{
 			bool have_bit = false;
 			for (size_t index = 0; index < (sizeof(T) * 8); index++) {
-				bool cur = (v & (1ull << index)) != 0;
+				bool cur = (v & (static_cast<T>(1ull) << index)) != 0;
 				if (cur) {
 					if (have_bit)
 						return false;
@@ -114,23 +114,23 @@ namespace util {
 			return true;
 		}
 
-#pragma push_macro("is_power_of_two_as_loop")
-#define is_power_of_two_as_loop(x)      \
+#pragma push_macro("P_IS_POWER_OF_TWO_AS_LOOP")
+#define P_IS_POWER_OF_TWO_AS_LOOP(x)      \
 	template<>                          \
 	inline bool is_power_of_two(x v)    \
 	{                                   \
 		return is_power_of_two_loop(v); \
 	}
-		is_power_of_two_as_loop(int8_t);
-		is_power_of_two_as_loop(uint8_t);
-		is_power_of_two_as_loop(int16_t);
-		is_power_of_two_as_loop(uint16_t);
-		is_power_of_two_as_loop(int32_t);
-		is_power_of_two_as_loop(uint32_t);
-		is_power_of_two_as_loop(int64_t);
-		is_power_of_two_as_loop(uint64_t);
-#undef is_power_of_two_as_loop
-#pragma pop_macro("is_power_of_two_as_loop")
+		P_IS_POWER_OF_TWO_AS_LOOP(int8_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(uint8_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(int16_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(uint16_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(int32_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(uint32_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(int64_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(uint64_t);
+#undef P_IS_POWER_OF_TWO_AS_LOOP
+#pragma pop_macro("P_IS_POWER_OF_TWO_AS_LOOP")
 
 		template<typename T>
 		inline uint64_t get_power_of_two_exponent_floor(T v)
@@ -144,6 +144,13 @@ namespace util {
 			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
 		}
 
+		template<typename T, typename C>
+		inline bool is_equal(T target, C value)
+		{
+			return (target > (value - std::numeric_limits<T>::epsilon()))
+				   && (target < (value + std::numeric_limits<T>::epsilon()));
+		}
+
 		template<typename T>
 		inline T gaussian(T x, T o /*, T u = 0*/)
 		{
@@ -152,7 +159,7 @@ namespace util {
 			static const double_t two_pi        = pi * 2.;
 			static const double_t two_pi_sqroot = 2.506628274631000502415765284811; //sqrt(two_pi);
 
-			if (o == 0) {
+			if (is_equal<double_t>(0, o)) {
 				return T(std::numeric_limits<double_t>::infinity());
 			}
 
